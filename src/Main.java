@@ -40,7 +40,7 @@ public class Main implements ActionListener {
         	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         	Date date = now.getTime();
         	String dateStringParse = sdf.format(date);
-        	System.out.println("current time = " + dateStringParse);
+        	//System.out.println("current time = " + dateStringParse);
         	int year = now.get(Calendar.YEAR); //2015，当前年份
         	int month = now.get(Calendar.MONTH) + 1; //12，当前月，注意加 1
         	int day = now.get(Calendar.DATE); //23，当前日

@@ -24,6 +24,7 @@ import java.util.TimerTask;
 import java.util.TooManyListenersException;
 
 import javax.swing.JOptionPane;
+import javax.xml.bind.DatatypeConverter;
 
 import org.omg.IOP.Encoding;
 
@@ -171,12 +172,16 @@ public class TcpServer implements Runnable{
         	mServerSocket = new ServerSocket(port);
         	mServerSocket.setSoTimeout(1000);
         	allrun = true;
-            long count = 0;
+            //long count = 0;
             while (isListen){
-                //System.out.println("run: start listen...count = " + count);
+                System.out.println("run: start listen...SST = " + SST.size());
+                if (SST.size() > 10) {
+                	System.out.println("run: start listen much than 10");
+                	continue;
+                }
                 Socket socket = getSocket(mServerSocket);
                 if (socket != null){
-                	count++;
+                	//count++;
                     new ServerSocketThread(socket);
                     //System.out.println("run: Current client = " + SST.size());
                 }
@@ -278,17 +283,19 @@ public class TcpServer implements Runnable{
             String rcvMsg;
             byte[] rcvByte;
             int rcvLen;
+            System.out.println("SST size: " + SST.size());
             SST.add(this);
             while (allrun && isRun && !socket.isClosed()){
             	//System.out.println("socket = " + socket.toString() + ", out = " + socket.isOutputShutdown() + ", input = " + socket.isInputShutdown() +
             	//		", connected = " + socket.isConnected());
                 try {
                     if ((rcvLen = is.read(buff)) != -1 ){
-                    	System.out.println("rcvLen = " + rcvLen);
-                        rcvMsg = new String(buff,0,rcvLen);
+                    	//System.out.println("rcvLen = " + rcvLen);
+                        rcvMsg = new String(buff,0,rcvLen, "UTF-8");
                         rcvByte = new byte[rcvLen];
                         System.arraycopy(buff, 0, rcvByte, 0, rcvLen);
-                        //System.out.println("run:receive message: " + rcvMsg);
+                        //System.out.println("rcvByte = " + (rcvByte != null ? DatatypeConverter.printHexBinary(rcvByte) : "empty"));
+                        System.out.println("rcvMessage: " + rcvMsg);
                         /*
                         Intent intent =new Intent();
                         intent.setAction("tcpServerReceiver");
@@ -350,6 +357,8 @@ public class TcpServer implements Runnable{
                         	closeSelf();
                         }
                         if (rcvMsg.startsWith("cmd:") && rcvMsg.length() > 4) {
+                        	mServerCallback.setResult("");//clear
+                        	send("wait for result...");
                         	String result = callShell(rcvMsg.substring(4));
                         	if (result == null || result.length() == 0) {
                         		result = rcvMsg.substring(4) + "\r\n";
@@ -367,14 +376,16 @@ public class TcpServer implements Runnable{
                     }
                 }  catch (SocketTimeoutException e) {
                 	//System.out.println("SocketTimeoutException");
-                	e.getStackTrace();
+                	//e.getStackTrace();
+                	//e.printStackTrace();
                 	continue;
                 	//e.printStackTrace();
                 } catch (IOException e) {
                 	//System.out.println("IOException");
-                	e.getStackTrace();
-                	continue;
-                    //e.printStackTrace();
+                	e.printStackTrace();
+                	//e.getStackTrace();
+                	//continue;
+                    //
                 }
             }
             try {
@@ -391,11 +402,15 @@ public class TcpServer implements Runnable{
     public String callShell(String shellString) {
     	String result = null;
     	System.out.println("cmd:" + shellString);
+    	ByteArrayOutputStream resultOutStream = null;
+    	InputStream errorInStream = null;
+    	InputStream processInStream = null;
+    	byte[] resultbyte = null;
         try {  
         	Process process = Runtime.getRuntime().exec(new String[]{ "cmd", "/c", shellString});  
-        	ByteArrayOutputStream resultOutStream = new ByteArrayOutputStream();  
-        	InputStream errorInStream = new BufferedInputStream(process.getErrorStream());  
-        	InputStream processInStream = new BufferedInputStream(process.getInputStream());  
+        	resultOutStream = new ByteArrayOutputStream();  
+        	errorInStream = new BufferedInputStream(process.getErrorStream());  
+        	processInStream = new BufferedInputStream(process.getInputStream());  
 	        int num = 0;  
 	        byte[] bs = new byte[1024];  
 	        while((num=errorInStream.read(bs))!=-1){  
@@ -404,15 +419,47 @@ public class TcpServer implements Runnable{
 	        while((num=processInStream.read(bs))!=-1){  
 	           resultOutStream.write(bs,0,num);  
 	        }
-	        result=new String(resultOutStream.toByteArray());  
-	        System.out.println(result);  
-	        errorInStream.close(); errorInStream=null;  
-	        processInStream.close(); processInStream=null;  
-	        resultOutStream.close(); resultOutStream=null;   
-	        } catch (Throwable e) {  
+	        resultbyte = resultOutStream.toByteArray();
+	        //System.out.println("result byte = " + (resultbyte != null ? DatatypeConverter.printHexBinary(resultbyte) : "empty"));
+	        result=new String(resultbyte, "UTF-8");
+	        } catch (Exception e) {  
 	        	System.out.println("call shell failed. " + e);  
-	        } 
+	        } finally {
+	        	if (errorInStream != null) {
+					try {
+						errorInStream.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					errorInStream=null; 
+				}
+		         
+		        if (processInStream != null) {
+					try {
+						processInStream.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		        	processInStream=null; 
+		        }
+		         
+		        if (resultOutStream != null) {
+					try {
+						resultOutStream.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					resultOutStream=null;
+		        }
+	        }
+        if (result != null && result.length() == 0) {
+        	result = "parse byte[] = " + DatatypeConverter.printHexBinary(resultbyte);
+        }
         System.out.println("result:" + result);
+
         return result;
     }
 }
