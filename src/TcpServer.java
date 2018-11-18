@@ -357,8 +357,8 @@ public class TcpServer implements Runnable{
                         	closeSelf();
                         }
                         if (rcvMsg.startsWith("cmd:") && rcvMsg.length() > 4) {
-                        	mServerCallback.setResult("");//clear
-                        	send("wait for result...");
+                        	mServerCallback.setResult(rcvMsg.substring(4) + " wait for result...");//clear
+                        	send(rcvMsg.substring(4) + " wait for result...");
                         	String result = callShell(rcvMsg.substring(4));
                         	if (result == null || result.length() == 0) {
                         		result = rcvMsg.substring(4) + "\r\n";
@@ -403,22 +403,60 @@ public class TcpServer implements Runnable{
     	String result = null;
     	System.out.println("cmd:" + shellString);
     	ByteArrayOutputStream resultOutStream = null;
-    	InputStream errorInStream = null;
-    	InputStream processInStream = null;
+    	BufferedInputStream errorInStream = null;
+    	BufferedInputStream processInStream = null;
     	byte[] resultbyte = null;
         try {  
-        	Process process = Runtime.getRuntime().exec(new String[]{ "cmd", "/c", shellString});  
-        	resultOutStream = new ByteArrayOutputStream();  
-        	errorInStream = new BufferedInputStream(process.getErrorStream());  
+        	Process process = Runtime.getRuntime().exec(new String[]{ "cmd", "/c", shellString});
+        	resultOutStream = new ByteArrayOutputStream();
+        	errorInStream = new BufferedInputStream(process.getErrorStream());
         	processInStream = new BufferedInputStream(process.getInputStream());  
 	        int num = 0;  
-	        byte[] bs = new byte[1024];  
-	        while((num=errorInStream.read(bs))!=-1){  
+	        byte[] bs = new byte[1024];
+	        int erroavailablelength = 0;
+	        int trytime = 5;
+	        while (true) {
+	        	erroavailablelength = errorInStream.available();
+	        	//System.out.println("erroavailablelength = " + erroavailablelength);
+	        	if (erroavailablelength == 0) {
+	        		trytime--;
+	        		if (trytime > 0) {
+	        			System.out.println("errorInStream try rest time = " + trytime);
+	        			Thread.sleep(50);
+	        			continue;
+	        		} else {
+	        			break;
+	        		}
+	        	} else if ((num=errorInStream.read(bs, 0, bs.length))!=-1) {
+	        		resultOutStream.write(bs,0,num);
+	        		break;
+	        	}
+	        }
+	        /*while((erroavailablelength != 0) && (num=errorInStream.read(bs, 0, bs.length))!=-1){  
 	             resultOutStream.write(bs,0,num);  
+	        }*/
+	        int processavailablelength = 0;
+	        trytime = 5;
+	        while (true) {
+	        	processavailablelength = processInStream.available();
+	        	//System.out.println("processavailablelength = " + processavailablelength);
+	        	if (processavailablelength == 0) {
+	        		trytime--;
+	        		if (trytime > 0) {
+	        			System.out.println("processInStream try rest time = " + trytime);
+	        			Thread.sleep(50);
+	        			continue;
+	        		} else {
+	        			break;
+	        		}
+	        	} else if ((num=processInStream.read(bs, 0, bs.length))!=-1) {
+	        		resultOutStream.write(bs,0,num);
+	        		break;
+	        	}
 	        }
-	        while((num=processInStream.read(bs))!=-1){  
+	        /*while((processavailablelength != 0) && (num=processInStream.read(bs, 0, bs.length))!=-1){  
 	           resultOutStream.write(bs,0,num);  
-	        }
+	        }*/
 	        resultbyte = resultOutStream.toByteArray();
 	        //System.out.println("result byte = " + (resultbyte != null ? DatatypeConverter.printHexBinary(resultbyte) : "empty"));
 	        result=new String(resultbyte, "UTF-8");
@@ -456,7 +494,7 @@ public class TcpServer implements Runnable{
 		        }
 	        }
         if (result != null && result.length() == 0) {
-        	result = "parse byte[] = " + DatatypeConverter.printHexBinary(resultbyte);
+        	result = shellString + " no ack but sucess";// + DatatypeConverter.printHexBinary(resultbyte);
         }
         System.out.println("result:" + result);
 
