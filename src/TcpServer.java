@@ -31,11 +31,11 @@ import org.omg.IOP.Encoding;
 public class TcpServer implements Runnable{
     private String TAG = "TcpServer";
     private int port = 19900;
-    private boolean isListen = true;   //线程监听标志位
+    private boolean isListen = true;
     public ArrayList<ServerSocketThread> SST = new ArrayList<ServerSocketThread>();
     private boolean hasLogClient = false;
     private String mSerialCommPort = "COM9";
-    private List<String> mCommList = new ArrayList<String>();   //保存可用端口号
+    private List<String> mCommList = new ArrayList<String>();
     private ServerSocket mServerSocket;
     private boolean allrun = true;
     private ServerCallback mServerCallback;
@@ -47,8 +47,7 @@ public class TcpServer implements Runnable{
     public TcpServer(){
     	
     }
-    
-    //更改监听标志位
+
     public void setIsListen(boolean b){
         isListen = b;
     }
@@ -225,18 +224,18 @@ public class TcpServer implements Runnable{
 
         public void send(String msg){
             pw.println(msg);
-            pw.flush(); //强制送出数据
+            pw.flush();
         }
         
         public void sendchar(char[] msg){
             pw.println(msg);
-            pw.flush(); //强制送出数据
+            pw.flush();
         }
         
         public void sendbyte(byte[] msg){
             try {
 				os.write(msg);
-				os.flush(); //强制送出数据
+				os.flush();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

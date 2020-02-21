@@ -9,7 +9,7 @@ import java.util.Date;
 
 class SaveLog{
 	private boolean fileLog = true;
-	private String logFileName = "C:/ServerLog/adbserverlog/";//指定程序执行结果保存的文件路径
+	private String logFileName = "C:/ServerLog/adbserverlog/";
 	private long lasttime = -1;
 	private String lasttile = null;
 	
@@ -36,8 +36,8 @@ class SaveLog{
 	}
 
 	public String getTime(String format) {
-		SimpleDateFormat df = new SimpleDateFormat(format/*"yyyy-MM-dd HH:mm:ss"*/);//设置日期格式
-		String date = df.format(new Date());// new Date()为获取当前系统时间，也可使用当前时间戳
+		SimpleDateFormat df = new SimpleDateFormat(format/*"yyyy-MM-dd HH:mm:ss"*/);
+		String date = df.format(new Date());
 		return date;
 	}
 	

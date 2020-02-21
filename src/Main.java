@@ -16,7 +16,6 @@ import javax.swing.JFrame;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-//1.´´½¨ÃûÎªLoginµÄÀà£¬ÔÚ¸ÃÀàÖĞ´´½¨Ò»¸öÃûÎªInitUIµÄ·½·¨£¬Í¼ĞÎ½çÃæ¾ÍÔÚ´Ë·½·¨ÖĞÊµÏÖ
 public class Main implements ActionListener {
 
 	private TcpServer mTcpServer;
@@ -41,9 +40,9 @@ public class Main implements ActionListener {
         	Date date = now.getTime();
         	String dateStringParse = sdf.format(date);
         	//System.out.println("current time = " + dateStringParse);
-        	int year = now.get(Calendar.YEAR); //2015£¬µ±Ç°Äê·İ
-        	int month = now.get(Calendar.MONTH) + 1; //12£¬µ±Ç°ÔÂ£¬×¢Òâ¼Ó 1
-        	int day = now.get(Calendar.DATE); //23£¬µ±Ç°ÈÕ
+        	int year = now.get(Calendar.YEAR); //2015ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½
+        	int month = now.get(Calendar.MONTH) + 1; //12ï¿½ï¿½ï¿½ï¿½Ç°ï¿½Â£ï¿½×¢ï¿½ï¿½ï¿½ 1
+        	int day = now.get(Calendar.DATE); //23ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½
         	int hour = now.get(Calendar.HOUR);
         	int minute = now.get(Calendar.MINUTE);
         	int second = now.get(Calendar.SECOND);
@@ -213,26 +212,15 @@ public class Main implements ActionListener {
     };
     
 	public void InitUI() {
-		//1.1´´½¨Ò»¸ö¶¥¼¶ÈİÆ÷£¬Ò²¾ÍÊÇ¿Õ°×´°¿Ú£¬²¢Îª´Ë´°¿ÚÉèÖÃÊôĞÔ£¨´°¿ÚÃû³Æ£¬´óĞ¡£¬ÏÔÊ¾Î»ÖÃ£¬¹Ø±ÕÉèÖÃ£©
-		
-		// ÓÃJFrame´´½¨Ò»¸öÃûÎªframeµÄ¶¥¼¶ÈİÆ÷£¬ĞèÒªÌí¼ÓµÄ°üÃûÎªjavax.swing.JFrame
 		JFrame frame=new JFrame();
-		//ÉèÖÃ´°¿ÚÃû³Æ
 		frame.setTitle("ADB cmd Server");
-		//ÉèÖÃ´°¿Ú´óĞ¡
 		frame.setSize(600,300);
-		//ÉèÖÃ´°¿ÚÎ»ÓÚÆÁÄ»ÖĞÑë
 		frame.setLocationRelativeTo(null);
-		//²ÎÊıÎª3Ê±£¬±íÊ¾¹Ø±Õ´°¿ÚÔò³ÌĞòÍË³ö
 		frame.setDefaultCloseOperation(3);
 		
-		//1.2ÉèÖÃ´°ÌåÉÏ×é¼şµÄ²¼¾Ö£¬´Ë´¦Ê¹ÓÃÁ÷Ê½²¼¾ÖFlowLayout£¬Á÷Ê½²¼¾ÖÀàËÆÓÚwordµÄ²¼¾Ö
-		//ÓÃFlowLayout´´½¨Ò»¸öÃûÎªf1µÄ¶ÔÏó,ĞèÒªÌí¼ÓµÄ°üÃûÎªjava.awt.FlowLayout£¬ÆäÖĞLEFT±íÊ¾×ó¶ÔÆë£¬CENTER±íÊ¾¾ÓÖĞ¶ÔÆë£¬RIGHT±íÊ¾ÓÒ¶ÔÆë
 		FlowLayout f1=new FlowLayout(FlowLayout.LEFT);
-		//frame´°¿ÚÉèÖÃÎªf1µÄÁ÷Ê½×ó¶ÔÆë
 		frame.setLayout(f1);
-		
-		//JButton´´½¨Ò»¸ö¿Éµã»÷µÄ°´Å¥£¬°´Å¥ÉÏ¿ÉÏÔÊ¾ÎÄ±¾Í¼Æ¬
+
 		start = new JButton("start");
 		start.setPreferredSize(new Dimension(80,30));
 		start.setActionCommand(characters[0]);
@@ -256,14 +244,13 @@ public class Main implements ActionListener {
 		start.addMouseListener(new MouseAdapter() {    
             public void mouseClicked(MouseEvent e){  
                 if(e.getClickCount()==2){  
-                    System.out.println("Ë«»÷¶¯×÷");  
+                    System.out.println("Ë«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");  
                 }else  
-                    System.out.println("µã»÷¶¯×÷");  
+                    System.out.println("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");  
             }  
               
         }); */
-		
-		//Í¬ÉÏ£¬´Ë´¦Ìí¼ÓµÄ²»ÊÇ¿ÕJLabel£¬¶øÊÇÄÚÈİÎª¡°ÕËºÅ¡±µÄJLabel
+
 		//status = new JTextField("");
 		status = new JTextArea("");
 		status.setPreferredSize(new Dimension(400,200));
@@ -272,13 +259,11 @@ public class Main implements ActionListener {
 		
 		frame.addWindowListener(new MyWin()); 
 		
-		//ÉèÖÃ´°¿Ú¿É¼û£¬´Ë¾äÒ»¶¨ÒªÔÚ´°¿ÚÊôĞÔÉèÖÃºÃÁËÖ®ºó²ÅÄÜÌí¼Ó£¬²»È»ÎŞ·¨Õı³£ÏÔÊ¾
 		frame.setVisible(true);
 	}
 	
 	@Override  
     public void actionPerformed(ActionEvent e) {  
-        // »ñÈ¡µã»÷°´Å¥µÄÎÄ±¾  
         String text = e.getActionCommand();  
    
         if (characters[0].equals(text)) {
@@ -289,9 +274,7 @@ public class Main implements ActionListener {
         	status.setText("stopped");
         }  
     }
-	
-	//ÒòÎª½Ó¿ÚWindowLinstenerÖĞµÄËùÓĞ·½·¨¶¼±»×ÓÀà WindowAdapterÊµÏÖÁË,.  
-	//²¢ÇÒ¸²¸ÇÁËÆäÖĞµÄËùÓĞ·½·¨,ÄÇÃ´ÎÒÃÇÖ»ÄÜ¼Ì³Ğ WindowAdapter ¸²¸ÇÎÒÃÇµÄ·½·¨¼´¿É  
+
 	class MyWin extends WindowAdapter{  
 	      
 	    @Override  
@@ -304,7 +287,6 @@ public class Main implements ActionListener {
 	    }  
 	    @Override  
 	    public void windowActivated(WindowEvent e) {  
-	        //Ã¿´Î»ñµÃ½¹µã ¾Í»á´¥·¢  
 	        System.out.println("Activated");    
 	        //super.windowActivated(e);  
 	    }  
