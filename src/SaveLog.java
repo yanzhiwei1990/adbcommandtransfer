@@ -7,54 +7,71 @@ import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-class SaveLog{
-	private boolean fileLog = true;
-	private String logFileName = "C:/ServerLog/adbserverlog/";
-	private long lasttime = -1;
-	private String lasttile = null;
+class SaveLog {
+	private static final String TAG = SaveLog.class.getSimpleName();
+	private static boolean mToFile = true;
+	private static String mLogFilePath = null;
+	private static SaveLog mInstance = null;
 	
-	public SaveLog() {
-		
-	}
-	
-	public OutputStream getOutputStream(){
-		lasttile = getTime("yyyy-MM-dd");
-		try {
-			if(fileLog) {
-				File file = new File(logFileName + lasttile + ".txt");
-				if(!file.exists())
-					file.createNewFile();
-				return new FileOutputStream(file, true);	
-			} else {
-				return System.out;
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	public static SaveLog getInstance() {
+		if (mInstance == null) {
+			mInstance = new SaveLog();
+			mLogFilePath = mInstance.getClass().getResource("/").getPath() + "Log/";
 		}
-		return System.out;
+		return mInstance;
 	}
 
-	public String getTime(String format) {
-		SimpleDateFormat df = new SimpleDateFormat(format/*"yyyy-MM-dd HH:mm:ss"*/);
+	public static void setFilePath(String path) {
+		getInstance().mLogFilePath = path;
+	}
+	
+	public static String getFilePath() {
+		return getInstance().mLogFilePath;
+	}
+	
+	/*
+	 * "yyyy-MM-dd HH:mm:ss"
+	 */
+	public static String getTime(String format) {
+		SimpleDateFormat df = new SimpleDateFormat(format);
 		String date = df.format(new Date());
 		return date;
 	}
 	
-	public synchronized void log(String info) {
-		OutputStream out = getOutputStream();
-		
-		String temp = getTime("yyyy-MM-dd HH:mm:ss") + "\r\n" + info;
+	public static synchronized void logToFile(String path, String info) {
+		File pathFile = null;
+		String currrentDate = getTime("yyyy-MM-dd") + ".txt";
 		try {
-			out.write(temp.getBytes("utf-8"));
-			out.flush();
-			out.close();
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (path != null) {
+				pathFile = new File(path + getTime("yyyy-MM-dd") + ".txt");
+			}
+			if(pathFile != null && !pathFile.exists()) {
+				pathFile.createNewFile();
+			}
+		} catch (Exception e) {
+			pathFile = null;
 		}
+		
+		OutputStream out = null;
+		if (pathFile != null && pathFile.exists()) {
+			String newContent = getTime("yyyy-MM-dd HH:mm:ss") + "\r\n" + info + "\r\n";
+			try {
+				out = new FileOutputStream(pathFile, true);
+				out.write(newContent.getBytes("utf-8"));
+				out.flush();
+				out.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			try {
+				if (out != null) {
+					out.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		
 	}
 }

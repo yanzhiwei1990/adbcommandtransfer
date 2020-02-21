@@ -8,34 +8,16 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.TooManyListenersException;
-
-import javax.swing.JOptionPane;
-import javax.xml.bind.DatatypeConverter;
-
-import org.omg.IOP.Encoding;
 
 public class TcpServer implements Runnable{
     private String TAG = "TcpServer";
     private int port = 19900;
     private boolean isListen = true;
-    public ArrayList<ServerSocketThread> SST = new ArrayList<ServerSocketThread>();
+    public List<ServerSocketThread> SST = new ArrayList<ServerSocketThread>();
     private boolean hasLogClient = false;
-    private String mSerialCommPort = "COM9";
-    private List<String> mCommList = new ArrayList<String>();
     private ServerSocket mServerSocket;
     private boolean allrun = true;
     private ServerCallback mServerCallback;
@@ -169,11 +151,11 @@ public class TcpServer implements Runnable{
     public void run() {
         try {
         	mServerSocket = new ServerSocket(port);
-        	mServerSocket.setSoTimeout(1000);
+        	mServerSocket.setSoTimeout(10000);
         	allrun = true;
             //long count = 0;
             while (isListen){
-                System.out.println("run: start listen...SST = " + SST.size());
+                //System.out.println("run: start listen...SST = " + SST.size());
                 if (SST.size() > 10) {
                 	System.out.println("run: start listen much than 10");
                 	continue;
@@ -414,6 +396,7 @@ public class TcpServer implements Runnable{
 	        byte[] bs = new byte[1024];
 	        int erroavailablelength = 0;
 	        int trytime = 5;
+	        
 	        while (true) {
 	        	erroavailablelength = errorInStream.available();
 	        	//System.out.println("erroavailablelength = " + erroavailablelength);
@@ -459,39 +442,39 @@ public class TcpServer implements Runnable{
 	        resultbyte = resultOutStream.toByteArray();
 	        //System.out.println("result byte = " + (resultbyte != null ? DatatypeConverter.printHexBinary(resultbyte) : "empty"));
 	        result=new String(resultbyte, "UTF-8");
-	        } catch (Exception e) {  
-	        	System.out.println("call shell failed. " + e);  
-	        } finally {
-	        	if (errorInStream != null) {
-					try {
-						errorInStream.close();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					errorInStream=null; 
+        } catch (Exception e) {  
+        	System.out.println("call shell failed. " + e);  
+        } finally {
+        	if (errorInStream != null) {
+				try {
+					errorInStream.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-		         
-		        if (processInStream != null) {
-					try {
-						processInStream.close();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-		        	processInStream=null; 
-		        }
-		         
-		        if (resultOutStream != null) {
-					try {
-						resultOutStream.close();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					resultOutStream=null;
-		        }
+				errorInStream=null; 
+			}
+	         
+	        if (processInStream != null) {
+				try {
+					processInStream.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	        	processInStream=null; 
 	        }
+	         
+	        if (resultOutStream != null) {
+				try {
+					resultOutStream.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				resultOutStream=null;
+	        }
+        }
         if (result != null && result.length() == 0) {
         	result = shellString + " no ack but sucess";// + DatatypeConverter.printHexBinary(resultbyte);
         }

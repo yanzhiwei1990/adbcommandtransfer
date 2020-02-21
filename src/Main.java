@@ -26,57 +26,91 @@ public class Main implements ActionListener {
 	private JButton stop;
 	//private JTextField status;
 	private JTextArea status;
-	private SaveLog mSaveLog;
 	
 	private Timer mTimer = new Timer();
     private boolean needreboot = false;
     private int mTimeoutAdb = 0;
     private boolean checkstatus = false;
+    //play time period
+    private final int[] REBOOT_TIME = {
+    		Calendar.AM, 0, 0, 0,
+    		Calendar.AM, 6, 0, 0,
+    		Calendar.PM, 12, 0, 0,
+    		Calendar.PM, 6, 0, 0
+    };
+    private final int[] LUNCHER_TIME = {
+    		Calendar.AM, 0, 30, 0,
+    		Calendar.AM, 1, 0, 0,
+    		Calendar.AM, 2, 0, 0,
+    		Calendar.AM, 3, 0, 0,
+    		Calendar.AM, 4, 0, 0,
+    		Calendar.AM, 5, 0, 0,
+    		Calendar.AM, 5, 30, 0
+    };
+    //luncher time period
+    
     private TimerTask mTask = new TimerTask() {
         @Override
         public void run() {
         	Calendar now = Calendar.getInstance();
-        	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        	Date date = now.getTime();
-        	String dateStringParse = sdf.format(date);
-        	//System.out.println("current time = " + dateStringParse);
-        	int year = now.get(Calendar.YEAR); //2015����ǰ���
-        	int month = now.get(Calendar.MONTH) + 1; //12����ǰ�£�ע��� 1
-        	int day = now.get(Calendar.DATE); //23����ǰ��
+        	int year = now.get(Calendar.YEAR);
+        	int month = now.get(Calendar.MONTH) + 1;
+        	int day = now.get(Calendar.DATE);
         	int hour = now.get(Calendar.HOUR);
         	int minute = now.get(Calendar.MINUTE);
         	int second = now.get(Calendar.SECOND);
         	int night = now.get(Calendar.AM_PM);
-        	/*if (!needreboot && hour == 0 && minute == 0) {
-        		//need reboot
-        		needreboot = true;
-        		mTimeoutAdb = 0;
-        		connectAdbCmd();
-        	} else {
-        		mTimeoutAdb++;
-        		if (mTimeoutAdb > 10 * 60 * 1000) {//10 min
-        			needreboot = false;
-        		}
-        	}
-        	if (adbConnected) {
-        		rebootAdbCmd();
-        		System.out.println("adb reboot result"); 
-        		adbConnected = false;
-        	}*/
-        	
-        	if ((night == Calendar.AM && //reboot at am 0:00 6:00 12:00 pm 5:00
-        			((hour == 0 && minute == 0 && second == 0) || (hour == 6 && minute == 0 && second == 0) || (hour == 11 && minute == 59 && second == 0))) ||
-        			(night == Calendar.PM && (hour == 5 && minute == 0 && second == 0))) {
+        	int[] currentTime = {night, hour, minute, second};
+
+        	if (isRebootTime(currentTime)) {
         		rebootAdbCmd();
         	}
-        	
-        	if ((night == Calendar.AM && ((hour == 6 && minute == 0 && second == 0) || (hour == 6 && minute == 30 && second == 0) || (hour == 7 && minute == 0 && second == 0)))||
-        			(night == Calendar.PM && ((hour == 0 && minute == 5 && second == 0) || (hour == 0 && minute == 10 && second == 0) || (hour == 0 && minute == 30 && second == 0)))) {//check at am 6:00 6:30 7:00 pm 
+        	if (isLuncherTime(currentTime)) {
         		currentAdbCmd();
         	}
         }
     };
 	
+    private boolean isRebootTime(int[] currentTime) {
+    	boolean isRebootTime = false;
+    	int equalCount = 0;
+    	if (currentTime != null && currentTime.length == 4) {
+    		for (int i = 0; i < REBOOT_TIME.length / 4; i++) {
+        		equalCount = 0;
+        		for (int j = 0; j < currentTime.length; j++) {
+        			if (REBOOT_TIME[i * 4 + j] == currentTime[j]) {
+        				equalCount++;
+        			}
+        		}
+        		if (equalCount == 4) {
+        			isRebootTime = true;
+        			break;
+        		}
+        	}
+    	}
+    	return isRebootTime;
+    }
+    
+    private boolean isLuncherTime(int[] currentTime) {
+    	boolean isLuncherTime = false;
+    	int equalCount = 0;
+    	if (currentTime != null && currentTime.length == 4) {
+    		for (int i = 0; i < LUNCHER_TIME.length / 4; i++) {
+        		equalCount = 0;
+        		for (int j = 0; j < currentTime.length; j++) {
+        			if (LUNCHER_TIME[i * 4 + j] == currentTime[j]) {
+        				equalCount++;
+        			}
+        		}
+        		if (equalCount == 4) {
+        			isLuncherTime = true;
+        			break;
+        		}
+        	}
+    	}
+    	return isLuncherTime;
+    }
+    
     private boolean adbConnected = false;
     
     private void connectAdbCmd() {
@@ -88,7 +122,7 @@ public class Main implements ActionListener {
 				if (result != null && result.contains("connected to homedevice.iask.in")) {
 					adbConnected = true;
 				}
-				mSaveLog.log("connectAdbCmd result = " + result);
+				SaveLog.logToFile(SaveLog.getFilePath(), "connectAdbCmd result = " + result);
 			}
     		
     	}).start();
@@ -101,11 +135,11 @@ public class Main implements ActionListener {
 				// TODO Auto-generated method stub
 				String result = mTcpServer.callShell("adb connect homedevice.iask.in:39634");
 				System.out.println("rebootAdbCmd connect = " + result);
-				mSaveLog.log("rebootAdbCmd connect result = " + result);
+				SaveLog.logToFile(SaveLog.getFilePath(), "rebootAdbCmd connect result = " + result);
 				if (result != null && result.contains("connected to homedevice.iask.in")) {
 					result = mTcpServer.callShell("adb reboot");
-					mSaveLog.log("rebootAdbCmd reboot result = " + result);
-					System.out.println("rebootAdbCmd reboot = " + result); 
+					SaveLog.logToFile(SaveLog.getFilePath(), "rebootAdbCmd reboot result = " + result);
+					System.out.println("rebootAdbCmd reboot result = " + result); 
 				}
 			}
     		
@@ -121,7 +155,7 @@ public class Main implements ActionListener {
 				if (result != null && result.contains("connected to homedevice.iask.in")) {
 					result = mTcpServer.callShell("adb shell \"dumpsys window | grep mCurrentFocus\"");
 					System.out.println("currentAdbCmd current = " + result);
-					mSaveLog.log("currentAdbCmd current result = " + result);
+					SaveLog.logToFile(SaveLog.getFilePath(), "currentAdbCmd current result = " + result);
 	        		if (result != null && !result.contains("IPTVPlayerActivity")) {
 	        			checkstatus = true;
 	        			//back
@@ -143,10 +177,10 @@ public class Main implements ActionListener {
 	        			delay(1000);
 	        			mTcpServer.callShell("adb shell \"input keyevent 8\"");
 	        			delay(1000);
-	        			mSaveLog.log("currentAdbCmd switch to cctv 11");
+	        			SaveLog.logToFile(SaveLog.getFilePath(), "currentAdbCmd switch to cctv 11");
 	        		} else {
 	        			checkstatus = false;
-	        			mSaveLog.log("currentAdbCmd is cctv 11");
+	        			SaveLog.logToFile(SaveLog.getFilePath(), "currentAdbCmd is cctv 11");
 	        		}
 				}	
 			}
@@ -171,8 +205,7 @@ public class Main implements ActionListener {
     	mMain.mStarted = true;
     	mMain.status.setText("started");
     	mMain.setInterface(mMain.mServerCallback);
-    	mMain.mSaveLog = new SaveLog();
-    	mMain.mTimer.schedule(mMain.mTask, 0, 1000 * 1);//run per 10 second
+    	mMain.mTimer.schedule(mMain.mTask, 0, 1000 * 1);//run per 1 second
     }
     
     private void startServer() {
@@ -201,13 +234,8 @@ public class Main implements ActionListener {
     
     public TcpServer.ServerCallback mServerCallback = new TcpServer.ServerCallback() {
     	public void setResult(String value) {
-    		//status.setText((mStarted ? "started: " : "stopped: ") + value);
-    		/*if (status.getLineCount() > 10) {
-    			mSaveLog.log(status.getText());
-    			status.setText("line is over 10, save and clear!\r\n");
-    		}*/
-    		status.setText(mSaveLog.getTime("HH:mm:ss") + "-" + (mStarted ? "started: " : "stopped: ") + value);
-    		mSaveLog.log(status.getText());
+    		status.setText(SaveLog.getTime("HH:mm:ss") + "-" + (mStarted ? "started: " : "stopped: ") + value);
+    		SaveLog.logToFile(SaveLog.getFilePath(), status.getText());
     	}
     };
     
@@ -232,24 +260,6 @@ public class Main implements ActionListener {
 		stop.setActionCommand(characters[1]);
 		stop.addActionListener(this);
 		frame.add(stop);
-		
-		/*start.addActionListener(new ActionListener() {  
-            @Override  
-            public void actionPerformed(ActionEvent e) {  
-                // TODO Auto-generated method stub
-                System.out.println("actionPerformed:" + e.getActionCommand());  
-            }  
-        });  
-          
-		start.addMouseListener(new MouseAdapter() {    
-            public void mouseClicked(MouseEvent e){  
-                if(e.getClickCount()==2){  
-                    System.out.println("˫������");  
-                }else  
-                    System.out.println("�������");  
-            }  
-              
-        }); */
 
 		//status = new JTextField("");
 		status = new JTextArea("");
