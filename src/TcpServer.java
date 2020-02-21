@@ -337,16 +337,27 @@ public class TcpServer implements Runnable{
                         	isRun = false;
                         	closeSelf();
                         }
-                        if (rcvMsg.startsWith("cmd:") && rcvMsg.length() > 4) {
-                        	mServerCallback.setResult(rcvMsg.substring(4) + " wait for result...");//clear
-                        	send(rcvMsg.substring(4) + " wait for result...");
-                        	String result = callShell(rcvMsg.substring(4));
-                        	if (result == null || result.length() == 0) {
-                        		result = rcvMsg.substring(4) + "\r\n";
+                        if (rcvMsg.indexOf("cmd:") != -1 && rcvMsg.length() > 4) {
+                        	if (!rcvMsg.startsWith("cmd:")) {
+                        		if (rcvMsg.length() - rcvMsg.indexOf("cmd:") > 4) {
+                        			rcvMsg = rcvMsg.substring(rcvMsg.indexOf("cmd:") + 4);
+                        		} else {
+                        			rcvMsg = null;
+                        		}
                         	}
-                        	System.out.println("cmd result = " + result);
-                        	send("result:" + result);
-                        	mServerCallback.setResult(result);
+                        	if (rcvMsg != null) {
+                        		mServerCallback.setResult(rcvMsg.substring(4) + " wait for result...");//clear
+                            	send(rcvMsg.substring(4) + " wait for result...");
+                            	String result = callShell(rcvMsg.substring(4));
+                            	if (result == null || result.length() == 0) {
+                            		result = rcvMsg.substring(4) + "\r\n";
+                            	}
+                            	System.out.println("cmd result = " + result);
+                            	send("result:" + result);
+                            	mServerCallback.setResult(result);
+                        	} else {
+                        		System.out.println("cmd rcvMsg error");
+                        	}
                         }
                     } else {
                     	System.out.println("run:buffer rcvLen = " + rcvLen);
@@ -365,7 +376,7 @@ public class TcpServer implements Runnable{
                 	//System.out.println("IOException");
                 	e.printStackTrace();
                 	//e.getStackTrace();
-                	//continue;
+                	break;
                     //
                 }
             }
