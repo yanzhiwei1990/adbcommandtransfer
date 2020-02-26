@@ -35,17 +35,21 @@ public class Main implements ActionListener {
     private final int[] REBOOT_TIME = {
     		Calendar.AM, 0, 0, 0,
     		Calendar.AM, 6, 0, 0,
+    		Calendar.AM, 11, 55, 0,
     		Calendar.PM, 12, 0, 0,
     		Calendar.PM, 6, 0, 0
     };
     private final int[] LUNCHER_TIME = {
     		Calendar.AM, 0, 30, 0,
-    		Calendar.AM, 1, 0, 0,
-    		Calendar.AM, 2, 0, 0,
-    		Calendar.AM, 3, 0, 0,
-    		Calendar.AM, 4, 0, 0,
-    		Calendar.AM, 5, 0, 0,
+    		Calendar.AM, 3, 30, 0,
     		Calendar.AM, 5, 30, 0
+    };
+    private final int[] TV_TIME = {
+    		Calendar.AM, 6, 10, 0,
+    		Calendar.AM, 6, 20, 0,
+    		Calendar.AM, 6, 30, 0,
+    		Calendar.PM, 12, 30, 0,
+    		Calendar.PM, 6, 30, 0
     };
     //luncher time period
     
@@ -66,7 +70,10 @@ public class Main implements ActionListener {
         		rebootAdbCmd();
         	}
         	if (isLuncherTime(currentTime)) {
-        		currentAdbCmd();
+        		switchLuncherAdbCmd();
+        	}
+        	if (isTvTime(currentTime)) {
+        		switchTvAdbCmd();
         	}
         }
     };
@@ -111,6 +118,26 @@ public class Main implements ActionListener {
     	return isLuncherTime;
     }
     
+    private boolean isTvTime(int[] currentTime) {
+    	boolean isTvTime = false;
+    	int equalCount = 0;
+    	if (currentTime != null && currentTime.length == 4) {
+    		for (int i = 0; i < TV_TIME.length / 4; i++) {
+        		equalCount = 0;
+        		for (int j = 0; j < currentTime.length; j++) {
+        			if (TV_TIME[i * 4 + j] == currentTime[j]) {
+        				equalCount++;
+        			}
+        		}
+        		if (equalCount == 4) {
+        			isTvTime = true;
+        			break;
+        		}
+        	}
+    	}
+    	return isTvTime;
+    }
+    
     private boolean adbConnected = false;
     
     private void connectAdbCmd() {
@@ -146,7 +173,38 @@ public class Main implements ActionListener {
     	}).start();
     }
     
-    private void currentAdbCmd() {
+    private void switchLuncherAdbCmd() {
+    	new Thread(new Runnable(){
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				String result = mTcpServer.callShell("adb connect homedevice.iask.in:39634");
+				if (result != null && result.contains("connected to homedevice.iask.in")) {
+					System.out.println("switchLuncherAdbCmd");
+					SaveLog.logToFile(SaveLog.getFilePath(), "switchLuncherAdbCmd");
+        			//back
+        			mTcpServer.callShell("adb shell \"input keyevent 4\"");
+        			delay(1000);
+        			mTcpServer.callShell("adb shell \"input keyevent 4\"");
+        			delay(1000);
+        			mTcpServer.callShell("adb shell \"input keyevent 4\"");
+        			delay(1000);
+        			mTcpServer.callShell("adb shell \"input keyevent 4\"");
+        			delay(1000);
+        			
+        			//home
+        			mTcpServer.callShell("adb shell \"input keyevent 3\"");
+        			delay(1000);
+        			mTcpServer.callShell("adb shell \"input keyevent 3\"");
+        			delay(1000);
+
+        			SaveLog.logToFile(SaveLog.getFilePath(), "switchLuncherAdbCmd switch to Luncher");
+				}	
+			}
+    	}).start();
+    }
+    
+    private void switchTvAdbCmd() {
     	new Thread(new Runnable(){
 			@Override
 			public void run() {
