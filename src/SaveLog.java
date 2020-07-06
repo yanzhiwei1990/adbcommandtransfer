@@ -71,7 +71,6 @@ class SaveLog {
 				e.printStackTrace();
 			}
 		}
-		
-		
+		System.out.println(info);
 	}
 }

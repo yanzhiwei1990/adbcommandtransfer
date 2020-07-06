@@ -16,7 +16,7 @@ import javax.swing.JFrame;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-public class Main implements ActionListener {
+public class MainUi implements ActionListener {
 
 	private TcpServer mTcpServer;
 	private Thread mThread;
@@ -254,8 +254,8 @@ public class Main implements ActionListener {
 		}
     }
     
-    public static void main(String[] args) {
-        Main mMain = new Main();
+    /*public static void main(String[] args) {
+        MainUi mMain = new MainUi();
         mMain.mTcpServer = new TcpServer(19900);
     	mMain.mThread = new Thread(mMain.mTcpServer);
     	mMain.InitUI();
@@ -264,7 +264,7 @@ public class Main implements ActionListener {
     	mMain.status.setText("started");
     	mMain.setInterface(mMain.mServerCallback);
     	mMain.mTimer.schedule(mMain.mTask, 0, 1000 * 1);//run per 1 second
-    }
+    }*/
     
     private void startServer() {
     	if (!mStarted) {
