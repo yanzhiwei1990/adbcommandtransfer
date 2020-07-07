@@ -391,68 +391,70 @@ public class TcpServer implements Runnable{
         }
     }
 
-    public String callShell(String shellString) {
+    public static String callShell(String shellString) {
     	String result = null;
     	System.out.println("cmd:" + shellString);
+    	
     	ByteArrayOutputStream resultOutStream = null;
     	BufferedInputStream errorInStream = null;
     	BufferedInputStream processInStream = null;
-    	byte[] resultbyte = null;
+    	
         try {  
-        	Process process = Runtime.getRuntime().exec(new String[]{ "cmd", "/c", shellString});
+        	Process process = null;
+        	String osVersion = System.getProperty("os.name");
+        	System.out.println("callShell os.name: " + osVersion);
+        	if (osVersion.toLowerCase().contains("linux".toLowerCase())) {
+        		process = Runtime.getRuntime().exec(new String[]{ "sh", "-c", shellString});//linux
+        	} else if (osVersion.toLowerCase().contains("window".toLowerCase())) {
+        		process = Runtime.getRuntime().exec(new String[]{ "cmd", "/c", shellString});//Windows 10
+        	} else {
+        		System.out.println("callShell unkown os.name " + osVersion);
+        		return result;
+        	}
+
         	resultOutStream = new ByteArrayOutputStream();
         	errorInStream = new BufferedInputStream(process.getErrorStream());
-        	processInStream = new BufferedInputStream(process.getInputStream());  
-	        int num = 0;  
-	        byte[] bs = new byte[1024];
-	        int erroavailablelength = 0;
+        	processInStream = new BufferedInputStream(process.getInputStream());
+        	
+	        int length = 0;  
+	        byte[] buffer = new byte[1024 * 1024];
 	        int trytime = 5;
+	        int trytimePeriod = 100;
 	        
 	        while (true) {
-	        	erroavailablelength = errorInStream.available();
-	        	//System.out.println("erroavailablelength = " + erroavailablelength);
-	        	if (erroavailablelength == 0) {
+	        	if (errorInStream.available() <= 0) {
 	        		trytime--;
 	        		if (trytime > 0) {
-	        			System.out.println("errorInStream try rest time = " + trytime);
-	        			Thread.sleep(50);
+	        			//System.out.println("errorInStream try rest time = " + trytime * trytimePeriod + " ms");
+	        			Thread.sleep(trytimePeriod);
 	        			continue;
 	        		} else {
 	        			break;
 	        		}
-	        	} else if ((num=errorInStream.read(bs, 0, bs.length))!=-1) {
-	        		resultOutStream.write(bs,0,num);
+	        	} else if ((length = errorInStream.read(buffer, 0, buffer.length))!= -1) {
+	        		resultOutStream.write(buffer, 0, length);
 	        		break;
 	        	}
 	        }
-	        /*while((erroavailablelength != 0) && (num=errorInStream.read(bs, 0, bs.length))!=-1){  
-	             resultOutStream.write(bs,0,num);  
-	        }*/
-	        int processavailablelength = 0;
+
 	        trytime = 5;
+	        length = 0;
 	        while (true) {
-	        	processavailablelength = processInStream.available();
-	        	//System.out.println("processavailablelength = " + processavailablelength);
-	        	if (processavailablelength == 0) {
+	        	if (processInStream.available() <= 0) {
 	        		trytime--;
 	        		if (trytime > 0) {
-	        			System.out.println("processInStream try rest time = " + trytime);
-	        			Thread.sleep(50);
+	        			//System.out.println("processInStream try rest time = " + trytime * trytimePeriod + " ms");
+	        			Thread.sleep(trytimePeriod);
 	        			continue;
 	        		} else {
 	        			break;
 	        		}
-	        	} else if ((num=processInStream.read(bs, 0, bs.length))!=-1) {
-	        		resultOutStream.write(bs,0,num);
+	        	} else if ((length = processInStream.read(buffer, 0, buffer.length)) != -1) {
+	        		resultOutStream.write(buffer, 0, length);
 	        		break;
 	        	}
 	        }
-	        /*while((processavailablelength != 0) && (num=processInStream.read(bs, 0, bs.length))!=-1){  
-	           resultOutStream.write(bs,0,num);  
-	        }*/
-	        resultbyte = resultOutStream.toByteArray();
-	        //System.out.println("result byte = " + (resultbyte != null ? DatatypeConverter.printHexBinary(resultbyte) : "empty"));
-	        result=new String(resultbyte, "UTF-8");
+	        result = new String(resultOutStream.toByteArray(), "UTF-8");
         } catch (Exception e) {  
         	System.out.println("call shell failed. " + e);  
         } finally {
@@ -460,37 +462,34 @@ public class TcpServer implements Runnable{
 				try {
 					errorInStream.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				errorInStream=null; 
+				errorInStream = null; 
 			}
 	         
 	        if (processInStream != null) {
 				try {
 					processInStream.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-	        	processInStream=null; 
+	        	processInStream = null; 
 	        }
 	         
 	        if (resultOutStream != null) {
 				try {
 					resultOutStream.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				resultOutStream=null;
+				resultOutStream = null;
 	        }
         }
         if (result != null && result.length() == 0) {
-        	result = shellString + " no ack but sucess";// + DatatypeConverter.printHexBinary(resultbyte);
+        	result = shellString + " no ack but sucess";
         }
-        System.out.println("result:" + result);
 
+        System.out.println("result:\n" + result);
         return result;
     }
 }
